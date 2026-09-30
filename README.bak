@@ -32,6 +32,4 @@ COMMANDS EXECUTED:
 
 ```bash
 aws ec2 create-vpc --cidr-block 10.0.0.0/16 --tag-specifications 'ResourceType=vpc,Tags=[{Key=Name,Value=m9-vpc}]'
-aws ec2 create-subnet --cidr-block 10.0.0.0/24 --vpc-id vpc-0c662b8efc05d8c8a --tag-specifications 'ResourceType=subnet,Tags=[{Key=Name,Value=m9-subnet}]' --region us-east-2
 
-```
