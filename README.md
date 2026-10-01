@@ -28,6 +28,10 @@ export AWS_REGION=us-east-2
 
 ### EXERCISE 3: Create VPC
 
+> [!NOTE]
+> Trial and error was a thing with this one. I attempted to ssh into the instance without creating a gateway or route from the vpc subnet to the gateway.
+> I learned my lesson
+
 COMMANDS EXECUTED:
 
 ```bash
@@ -69,3 +73,42 @@ COMMANDS EXECUTED:
 sudo apt install docker-compose-v2 -y
 docker compose version == Docker Compose version 2.40.3+ds1-0ubuntu1
 ```
+
+### EXERCISE 7: Add "deploy to EC2 step to your existing pipeline
+
+**Please Review Jenkinsfile to see logic**
+Here is the shared Library that is referenced in Jenkinsfile: https://github.com/rikg215/jenkins-shared-library
+
+### EXERCISE 8: Configure access from browser (EC2 Security Group)
+
+COMMANDS EXECUTED:
+
+> [!NOTE]
+> I spoke on this in Exercise 3, I completed this step ahead of time
+> re-pasting associated commands below
+
+```bash
+aws ec2 authorize-security-group-ingress --group-id sg-0ddabbae571d0125a --port 22 --protocol tcp --cidr $HOME_IP
+aws ec2 create-internet-gateway --tag-specifications 'ResourceType=internet-gateway,Tags=[{Key=Name,Value=m9-igw}]' --region us-east-2
+aws ec2 attach-internet-gateway --vpc-id vpc-0c662b8efc05d8c8a --internet-gateway-id igw-083fdb5ebcaa4fd50
+aws ec2 describe-route-tables --filters Name=vpc-id,Values=vpc-0c662b8efc05d8c8a \
+  --query "RouteTables[].[RouteTableId,Routes]"
+aws ec2 create-route --route-table-id rtb-0fa5af8155804160f --destination-cidr-block 0.0.0.0/0 --gateway-id igw-083fdb5ebcaa4fd50
+```
+
+### EXERCISE 9: Configure automatic triggering of multi-branch pipeline
+
+CHALLENGES ENCOUNTERED:
+- Jenkins EC2 Host went over disk threshold so Jenkins stopped working jobs. Resolved by using `docker system prune -a` and adding `docker rmi ${env.IMAGE_NAME}` to Jenkins file at the end of the image build step
+- WEBHOOKS. I had to allow the hook ip ranges from github in my security group as new rules.
+- Infinite build loop. Fixed by getting the Ignore Commiter Strategy plugin and ignoring commits from jenkins email.
+
+**SUCCESS**
+<img width="2204" height="631" alt="image" src="https://github.com/user-attachments/assets/70784c43-9033-4033-ae2b-bf6a51f24560" />
+
+BONUS KNOWLEDGE:
+- Solidified the workflow of using ci/jenkins-pipeline to make changes to Jenkinsfile and then created pull requests to merge those changes to main. Implemented branch protection on main with ci PR head checks. Mostly cosmetic since my test stage for other branches are just an echo command still great practice.
+- Learned about branch protection
+- Learned basics of AWS CLI and how to get a good amount of tasks done
+
+
